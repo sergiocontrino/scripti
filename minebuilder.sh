@@ -1,18 +1,26 @@
 #!/bin/bash
 #
-# usage: minebuilder.sh          batch mode
+# usage: minebuilder.sh          batch mode NB: builds flymine by default
+#        mk=inebuilder.sh -H     batch mode, builds humanmine
 #        minebuilder.sh -i       interactive (crude step by step) mode
 #
+
 # TODO: exit if wrong switchs combination
 #
 
 # default settings: edit with care
 INTERACT=n       # y: step by step interaction
-SWAP=y           # n: don't swap db
-GETDATA=y        # n: don't update uniprot and gff
+SWAP=n           # y: swap db
+GETDATA=n        # y: run the download script?
 DSONLY=n         # y: just update the sources (don't build)
 MAPONLY=n        # y: just do the sitemap (just that!)
-MINE=flymine     
+BUILD=y          # n: don't run the build
+FLYBASE=n        # y: get FB files and build FB db
+
+
+MINE=flymine
+REL=""
+  
 
 # tmp until we fix .bashrc
 #export JAVA_HOME=""
@@ -23,10 +31,13 @@ function usage () {
 	cat <<EOF
 
 Usage:
-$progname [-S] [-M] [-d] [-i] [-s]
+$progname [-F] [-H] [-S] [-M] [-d] [-i] [-s] [-r release]
+  -F: build flymine
+  -H: build humanmine
   -M: just do the sitemap
   -S: just get the sources (no build)
   -d: no checking of sources for update
+  -r: the release number
 	-i: interactive mode
 	-s: no swapping of build db (for example after a build fail)
 	-v: verbode mode
@@ -43,30 +54,36 @@ EOF
 }
 
 
-while getopts "FHSMdis" opt; do
+while getopts "FHSMdisnfr:" opt; do
    case $opt in
         F )  echo "- building FLYMINE" ; MINE=flymine;;
         H )  echo "- building HUMANMINE" ; MINE=humanmine;;        
         S )  echo "- Just updating sources (no build)" ; DSONLY=y;;
         M )  echo "- Just do the sitemap" ; MAPONLY=y;;
-	      d )  echo "- Don't mirror sources" ; GETDATA=n;;
-	      i )  echo "- Interactive mode" ; INTERACT=y;;
+	    d )  echo "- Don't mirror sources" ; GETDATA=n;;
+	    i )  echo "- Interactive mode" ; INTERACT=y;;
         s )  echo "- Don't swap db" ; SWAP=n;;
+        n )  echo "- Don't build the mine"; BUILD=n;;
+        f )  echo "- Build FLYBASE"; FLYBASE=y;;
+      	r )  REL=$OPTARG; echo "- Using release $REL";;
         h )  usage ;;
-	      \?)  usage ;;
+	    \?)  usage ;;
    esac
 done
 
 shift $(($OPTIND - 1))
 
-#COV=covidmine.properties
 
+CODEDIR=/data/code
 PDIR=$HOME/.intermine
-MINEDIR=/code/flymine
+MINEDIR=$CODEDIR/$MINE
 DATADIR=/micklem/data
 SMSDIR=/code/intermine-sitemaps
+DUMPDIR=/micklem/dumps/humanmine
 
 # TODO: check you are the rigth (humanbuild) user
+
+
 
 
 function interact {
@@ -102,15 +119,23 @@ echo "NOT IMPLEMENTED YET"
 
 }
 
-function getFB { # ~15 mins
-# check you are on mega2
-# TODO
+function donothing {
+echo "Just printing..."
+}
+
+
+function getFB { 
+# TODO check you are on mega2
+
 FBDIR=/data/fb
+
+cd $FBDIR
 
 rm FB*
 rm md5sum.txt
 rm README
 
+# ~15 mins
 wget ftp://ftp.flybase.net/releases/current/psql/*
 
 # check md5?
@@ -119,12 +144,33 @@ wget ftp://ftp.flybase.net/releases/current/psql/*
 FB=`grep createdb README | cut -d' ' -f5`
 createdb -h localhost -U flymine $FB
 
-# load - ~
+# load - long ~10h?
 cat FB* | gunzip | psql -h mega2 -U flymine -d $FB
 
 # do the vacuum (analyse) (new step, check if it improves build times)
-vacuumdb -f -z -v -h mega2 -U flymine -d $FB
+# it increases db size, check if worth it. long: 
+#vacuumdb -f -z -v -h mega2 -U flymine -d $FB
 
+}
+
+
+function buildmine { 
+# TODO check you are on mega2
+
+cd $MINEDIR
+
+# TODO mv all logs in a dir $MINEDIR/ark/$PREVREL
+#export JAVA_HOME=""
+
+# check if success
+./project_build -b -v localhost $DUMPDIR/$MINE$REL\
+|| { printf "%b" "\n  build FAILED!\n" ; exit 1 ; }
+
+# if not on production machine you don't need: 
+#./gradlew postProcess -Pprocess=create-autocomplete-index
+#./gradlew postProcess -Pprocess=create-search-index
+#
+# TODO rm from build project.xml?
 }
 
 
@@ -172,20 +218,22 @@ then
 fi
 
 
-cd $COVDIR
+if [ $FLYBASE = "y" ]
+then
+interact "Building FLYBASE db.."
+#donothing
+getFB
+fi
 
-interact "Building.."
 
-#export JAVA_HOME=""
-rm $DATADIR/dumps/cov*
+if [ $BUILD = "y" ]
+then
+interact "Building $MINE $REL .."
+#donothing
+buildmine
+fi
 
-# check if success
-./project_build -b -v localhost $DATADIR/dumps/cov\
-|| { printf "%b" "\n  build FAILED!\n" ; exit 1 ; }
 
-# if not on production machine you don't need: 
-#./gradlew postProcess -Pprocess=create-autocomplete-index
-#./gradlew postProcess -Pprocess=create-search-index
 
 #interact "Deploying"
 
