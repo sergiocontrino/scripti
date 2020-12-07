@@ -7,6 +7,7 @@
 
 # TODO: exit if wrong switchs combination
 #
+#       add switch for BDGP
 
 # default settings: edit with care
 INTERACT=n       # y: step by step interaction
@@ -124,6 +125,67 @@ echo "Just printing..."
 }
 
 
+function getBDGP { 
+# TODO check you are on mega2
+
+BDGPDIR=/micklem/data/flymine/bdgp-insitu
+
+cd $BDGP/mysql
+
+# to check if there is change
+B4=`stat insitu.sql.gz | grep Change`
+
+wget -N https://insitu.fruitfly.org/insitu-mysql-dump/insitu.sql.gz
+
+A3=`stat insitu.sql.gz | grep Change`
+
+if [ "$B4" != "$A3" ]
+then
+# cp, expand and load into mysql, query and update annotation file
+
+NOW=`date "+%Y%m%d"`
+mkdir $NOW
+cp insitu.sql.gz $NOW
+gzip -d $NOW/insitu.sql.gz
+
+#create db
+mysql -u flymine -p -e "CREATE DATABASE bdgp$NOW;"
+
+# load 30 mins?
+mysql -u flymine bdgp$NOW < $BDGPDIR/$NOW/insitu.sql
+
+# run query
+# TODO: change mysql conf to allow dumpiong of files in BDGP dir
+
+EXPDIR="/var/lib/mysql-files/" 
+
+QUERY="select distinct g.gene_id, a.stage, i.image_path, t.go_term \
+from main g, image i, annot a, annot_term j, term t \
+where g.id = a.main_id and a.id = i.annot_id and g.gene_id LIKE 'CG%' \
+and a.id = j.annot_id and j.term_id = t.id \
+into outfile '$EXPDIR/bdgp-mysql.out';"
+
+# a few secs
+mysql -u flymine -d bdgp$NOW -e "$QUERY"
+
+mkdir $BDGPDIR/$NOW
+
+cp $EXPDIR/bdgp-mysql.out $BDGPDIR/$NOW
+
+cd $BDGPDIR
+rm current
+
+ln -s $NOW current
+
+echo "$BDGPDIR/$NOW updated!"
+fi
+else
+echo "BDGP has not been updated."
+fi
+}
+
+
+
 function getFB { 
 # TODO check you are on mega2
 
@@ -214,6 +276,8 @@ fi
 if [ $GETDATA = "y" ]
 then
    interact "Getting sources"
+   echo "Starting with BDGP.."
+   getBDGP
    getSources
 fi
 
