@@ -148,7 +148,7 @@ createdb -h localhost -U flymine $FB
 cat FB* | gunzip | psql -h mega2 -U flymine -d $FB
 
 # do the vacuum (analyse) (new step, check if it improves build times)
-# it increases db size, check if worth it. long: 
+# it increases db size (then get back again) check if worth it. long: 9h!
 #vacuumdb -f -z -v -h mega2 -U flymine -d $FB
 
 }
