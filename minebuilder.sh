@@ -184,6 +184,43 @@ echo "BDGP has not been updated."
 fi
 }
 
+function getNCBIgene { 
+# 
+
+WDIR=/micklem/data/human/gff
+
+cd $WDIR
+
+URI1="ftp://ftp.ncbi.nlm.nih.gov/genomes/refseq/vertebrate_mammalian/"
+URI2="Homo_sapiens/reference/GCF_000001405.39_GRCh38.p13/"
+FILE="GCF_000001405.39_GRCh38.p13_genomic.gff.gz"
+
+# to check if there is change
+B4=`stat $FILE | grep Change`
+
+wget -N $URI1$URI2$FILE
+
+A3=`stat $FILE | grep Change`
+
+if [ "$B4" != "$A3" ]
+then
+# cp, expand and load into mysql, query and update annotation file
+
+NOW=`date "+%Y%m%d"`
+mkdir $NOW
+cp $FILE $NOW
+gzip -d $NOW/$FILE
+
+rm current
+
+ln -s $NOW current
+
+echo "NCBI Gene updated!"
+fi
+else
+echo "NCBI Gene has not been updated."
+fi
+}
 
 
 function getFB { 
@@ -278,6 +315,9 @@ then
    interact "Getting sources"
    echo "Starting with BDGP.."
    getBDGP
+   echo "Human gff (NCBI gene)"
+   getNCBIgene
+   
    getSources
 fi
 
