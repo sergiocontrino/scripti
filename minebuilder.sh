@@ -185,7 +185,6 @@ fi
 }
 
 function getNCBIgene { 
-# 
 
 WDIR=/micklem/data/human/gff
 
@@ -221,6 +220,34 @@ else
 echo "NCBI Gene has not been updated."
 fi
 }
+
+function getNCBIfasta { 
+
+WDIR=/micklem/data/human/fasta
+
+cd $WDIR
+
+URI1="ftp://ftp.ncbi.nlm.nih.gov/genomes/refseq/vertebrate_mammalian/"
+URI2="Homo_sapiens/reference/GCF_000001405.39_GRCh38.p13/"
+URI3="GCF_000001405.39_GRCh38.p13_assembly_structure/Primary_Assembly/"
+
+# we assume these always change
+
+NOW=`date "+%Y%m%d"`
+mkdir $NOW
+cd $NOW
+wget $URI1$URI2$URI3assembled_chromosomes/FASTA/*
+gzip -d *
+
+cd $WDIR
+
+rm current
+
+ln -s $NOW current
+
+echo "NCBI fasta updated!"
+}
+
 
 
 function getFB { 
@@ -317,6 +344,8 @@ then
    getBDGP
    echo "Human gff (NCBI gene)"
    getNCBIgene
+   echo "Human fasta (NCBI fasta)"
+   getNCBIfasta
    
    getSources
 fi
