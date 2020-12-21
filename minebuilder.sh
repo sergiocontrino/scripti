@@ -203,6 +203,58 @@ A3=`stat $FILE | grep Change`
 
 if [ "$B4" != "$A3" ]
 then
+
+NOW=`date "+%Y%m%d"`
+mkdir $NOW
+cp $FILE $NOW
+gzip -d $NOW/$FILE
+
+rm current
+
+ln -s $NOW current
+
+echo "NCBI Gene updated!"
+fi
+else
+echo "NCBI Gene has not been updated."
+fi
+}
+
+
+function getHPO { 
+
+WDIR=/micklem/data/hpo
+CFLAG="n"
+
+cd $WDIR
+
+URI1="http://compbio.charite.de/jenkins/job/hpo.annotations"
+URI2="/lastStableBuild/artifact/misc"
+
+cd mirror
+
+# to check if there is change
+B4=`stat phenotype_annotation.tab | grep Change`
+wget -N $URI1$URI2/phenotype_annotation.tab
+A3=`stat phenotype_annotation.tab | grep Change`
+
+if [ "$B4" != "$A3" ]
+then
+CFLAG="y"
+fi
+
+B4=`stat phenotype_annotation_negated.tab | grep Change`
+wget -N $URI1$URI2/phenotype_annotation.tab
+A3=`stat phenotype_annotation_negated.tab | grep Change`
+
+if [ "$B4" != "$A3" ]
+then
+CFLAG="y"
+fi
+
+
+if [ "$CFLAG" = "y" ]
+then
 # cp, expand and load into mysql, query and update annotation file
 
 NOW=`date "+%Y%m%d"`
@@ -220,6 +272,8 @@ else
 echo "NCBI Gene has not been updated."
 fi
 }
+
+
 
 function getNCBIfasta { 
 
@@ -267,6 +321,8 @@ wget ftp://ftp.flybase.net/releases/current/psql/*
 # check md5?
 
 # create new fb db (TODO: remove old one?)
+# TODO: actually keep a constant name (flybase) for the build properties
+
 FB=`grep createdb README | cut -d' ' -f5`
 createdb -h localhost -U flymine $FB
 
@@ -280,6 +336,8 @@ cat FB* | gunzip | psql -h mega2 -U flymine -d $FB
 }
 
 
+
+
 function buildmine { 
 # TODO check you are on mega2
 
@@ -287,6 +345,7 @@ cd $MINEDIR
 
 # TODO mv all logs in a dir $MINEDIR/ark/$PREVREL
 #export JAVA_HOME=""
+
 
 # check if success
 ./project_build -b -v localhost $DUMPDIR/$MINE$REL\
@@ -346,6 +405,9 @@ then
    getNCBIgene
    echo "Human fasta (NCBI fasta)"
    getNCBIfasta
+   
+   echo "Phenotypes HPO"
+   getHPO
    
    getSources
 fi
