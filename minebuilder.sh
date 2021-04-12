@@ -120,14 +120,16 @@ if [ $DSONLY = "y" ]
 then
   interact "Get human FASTA please"
   getNCBIfasta
-  exit;
+else
+  continue
 fi
 
 if [ $DSONLY = "y" ]
 then
   interact "Get Human GFF please"
   getNCBIgene
-  exit;
+else
+  continue
 fi
 
 }
@@ -190,7 +192,7 @@ rm current
 ln -s $NOW current
 
 echo "$BDGPDIR/$NOW updated!"
-fi
+
 else
 echo "BDGP has not been updated."
 fi
@@ -226,7 +228,6 @@ rm current
 ln -s $NOW current
 
 echo "NCBI Gene updated!"
-fi
 else
 echo "NCBI Gene has not been updated."
 fi
@@ -279,7 +280,6 @@ rm current
 ln -s $NOW current
 
 echo "NCBI Gene updated!"
-fi
 else
 echo "NCBI Gene has not been updated."
 fi
