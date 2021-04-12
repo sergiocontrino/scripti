@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # usage: minebuilder.sh          batch mode NB: builds flymine by default
-#        mk=inebuilder.sh -H     batch mode, builds humanmine
+#        minebuilder.sh -H     batch mode, builds humanmine
 #        minebuilder.sh -i       interactive (crude step by step) mode
 #
 
@@ -116,7 +116,19 @@ function getSources {
 # or should we change to use wget and a mirroring system?
 #
 
-echo "NOT IMPLEMENTED YET"
+if [ $DSONLY = "y" ]
+then
+  interact "Get human FASTA please"
+  getNCBIfasta
+  exit;
+fi
+
+if [ $DSONLY = "y" ]
+then
+  interact "Get Human GFF please"
+  getNCBIgene
+  exit;
+fi
 
 }
 
