@@ -8,6 +8,8 @@
 # TODO: exit if wrong switchs combination
 #
 #       add switch for BDGP
+#       NCBIfasta: - mirror?
+#                  - gzip must check files integrity first/retry in case 
 
 # default settings: edit with care
 INTERACT=n       # y: step by step interaction
@@ -211,7 +213,7 @@ FILE="GCF_000001405.39_GRCh38.p13_genomic.gff.gz"
 # to check if there is change
 B4=`stat $FILE | grep Change`
 
-wget -N $URI1$URI2$FILE
+wget -N "$URI1$URI2$FILE"
 
 A3=`stat $FILE | grep Change`
 
@@ -229,7 +231,7 @@ ln -s $NOW current
 
 echo "NCBI Gene updated!"
 else
-echo "NCBI Gene has not been updated."
+echo "NCBI Gene was already up to date, not retrieved."
 fi
 }
 
@@ -295,14 +297,14 @@ cd $WDIR
 
 URI1="ftp://ftp.ncbi.nlm.nih.gov/genomes/refseq/vertebrate_mammalian/"
 URI2="Homo_sapiens/reference/GCF_000001405.39_GRCh38.p13/"
-URI3="GCF_000001405.39_GRCh38.p13_assembly_structure/Primary_Assembly/"
+URI3="GCF_000001405.39_GRCh38.p13_assembly_structure/Primary_Assembly"
 
 # we assume these always change
 
-NOW=`date "+%Y%m%d"`
+NOW=`date "+%Y-%m-%d"`
 mkdir $NOW
 cd $NOW
-wget $URI1$URI2$URI3assembled_chromosomes/FASTA/*
+wget "$URI1$URI2$URI3"/assembled_chromosomes/FASTA/*
 gzip -d *
 
 cd $WDIR
