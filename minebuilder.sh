@@ -108,6 +108,18 @@ read
 fi
 }
 
+function interacts {
+# s will skip current step and go to the next
+if [ $INTERACT = "y" ]
+then
+echo; echo "$1"
+echo "Press s to skip this step, return to continue (^C to exit).."
+echo -n "->"
+read 
+fi
+}
+
+
 function swap {
 # to change build db
 #
@@ -128,7 +140,52 @@ function getSources {
 
 if [ $DSONLY = "y" ]
 then
-  interact "Get human FASTA please"
+  interacts "Get human FASTA please"
+  
+  if [ $REPLY -a $REPLY != 's' ]
+	then
+		echo "running getNCBIfasta.."
+		getNCBIfasta
+	else
+		echo "skipping.."
+	fi
+fi
+
+if [ $DSONLY = "y" ]
+then
+  interacts "Get human GFF please"
+  
+  if [ $REPLY -a $REPLY != 's' ]
+	then
+		echo "running getNCBIgff.."
+		getNCBIgff
+	else
+		echo "skipping.."
+	fi
+fi
+
+
+if [ $DSONLY = "y" ]
+then
+  interacts "Update NCBI (add ensembl IDs)"
+  
+  if [ $REPLY -a $REPLY != 's' ]
+	then
+		echo "running updateNCBI.."
+		updateNCBI
+	else
+		echo "skipping.."
+	fi
+fi
+
+}
+
+
+function getSourcesInBatch {
+
+if [ $DSONLY = "y" ]
+then
+  interact "Get Human FASTA please"
   getNCBIfasta
 else
   continue
@@ -142,7 +199,6 @@ else
   continue
 fi
 
-
 if [ $DSONLY = "y" ]
 then
   interact "Update NCBI (add ensembl IDs)"
@@ -151,9 +207,7 @@ else
   continue
 fi
 
-
 }
-
 
 function updateNCBI { 
 
