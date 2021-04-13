@@ -80,12 +80,17 @@ done
 shift $(($OPTIND - 1))
 
 
-CODEDIR=/data/code
 PDIR=$HOME/.intermine
+
+CODEDIR=/data/code
 MINEDIR=$CODEDIR/$MINE
+SMSDIR=$CODEDIR/intermine-sitemaps
+SHDIR=$CODEDIR/intermine-scripts
+
 DATADIR=/micklem/data
-SMSDIR=/code/intermine-sitemaps
+
 DUMPDIR=/micklem/dumps/humanmine
+
 
 # TODO: check you are the rigth (humanbuild) user
 
@@ -137,7 +142,42 @@ else
   continue
 fi
 
+
+if [ $DSONLY = "y" ]
+then
+  interact "Update NCBI (add ensembl IDs)"
+  updateNCBI
+else
+  continue
+fi
+
+
 }
+
+
+function updateNCBI { 
+
+cd $SHDIR
+
+echo "Running perl script adding ensembl ids..."
+./bio/humanmine/ncbi-update.pl
+
+WDIR=$DATADIR/ncbi/current
+
+if [ -s "$WDIR/tmp/renamed-ncbi.txt" ]
+then
+mv "$WDIR/All_Data.gene_info" "$WDIR/tmp/All_Data.gene_info.or"
+read
+mv "$WDIR/tmp/renamed-ncbi.txt" "$WDIR/All_Data.gene_info"
+read
+echo "NCBI Gene updated!"
+else
+echo "ERROR, please check $WDIR"
+fi
+}
+
+
+
 
 function donothing {
 echo "Just printing..."
