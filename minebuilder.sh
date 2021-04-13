@@ -191,6 +191,23 @@ then
 	fi
 fi
 
+if [ $DSONLY = "y" ]
+then
+  interacts "Get protein to domain data"
+  
+  if [ $REPLY -a $REPLY != 's' ]
+	then
+		echo "getting data.."
+		getProt2Dom
+	else
+		echo "skipping.."
+	fi
+fi
+
+
+
+echo "bye!"
+
 }
 
 
@@ -262,6 +279,36 @@ echo "Running python script getting gene summaries..."
 
 }
 
+
+function getProt2Dom { 
+
+WDIR=$DATADIR/interpro/match_complete
+
+cd $WDIR
+
+NOW=`date "+%Y-%m-%d"`
+mkdir $NOW
+
+rm current
+ln -s $NOW current
+
+cd current
+
+F1=ftp.ebi.ac.uk/pub/databases/interpro/current/match_complete.xml.gz
+F2=ftp.ebi.ac.uk/pub/databases/interpro/current/protein2ipr.dat.gz
+
+echo "Getting match_complete file from interpro..."
+wget $F1
+
+echo "Getting protein2ipr file from interpro..."
+wget $F2
+
+echo "Expanding files.."
+gzip -d *.gz
+
+ls -la
+
+}
 
 
 function donothing {
