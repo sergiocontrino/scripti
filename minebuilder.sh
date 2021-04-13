@@ -10,6 +10,9 @@
 #       add switch for BDGP
 #       NCBIfasta: - mirror?
 #                  - gzip must check files integrity first/retry in case 
+#       transform this into a get sources script (to be called by a 
+#       buildmine one), remove switches (NB GETDATA)
+
 
 # default settings: edit with care
 INTERACT=n       # y: step by step interaction
@@ -129,7 +132,7 @@ fi
 if [ $DSONLY = "y" ]
 then
   interact "Get Human GFF please"
-  getNCBIgene
+  getNCBIgff
 else
   continue
 fi
@@ -200,7 +203,7 @@ echo "BDGP has not been updated."
 fi
 }
 
-function getNCBIgene { 
+function getNCBIgff { 
 
 WDIR=/micklem/data/human/gff
 
