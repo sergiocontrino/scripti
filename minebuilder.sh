@@ -82,19 +82,19 @@ shift $(($OPTIND - 1))
 
 PDIR=$HOME/.intermine
 
-CODEDIR=/data/code
+DATADIR=/micklem/data
+
+#CODEDIR=/data/code
+CODEDIR=$DATADIR/thalemine/git
+
 MINEDIR=$CODEDIR/$MINE
 SMSDIR=$CODEDIR/intermine-sitemaps
 SHDIR=$CODEDIR/intermine-scripts
-
-DATADIR=/micklem/data
 
 DUMPDIR=/micklem/dumps/humanmine
 
 
 # TODO: check you are the rigth (humanbuild) user
-
-
 
 
 function interact {
