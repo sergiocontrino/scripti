@@ -214,15 +214,15 @@ function updateNCBI {
 cd $SHDIR
 
 echo "Running perl script adding ensembl ids..."
-./bio/humanmine/ncbi-update.pl
+#./bio/humanmine/ncbi-update.pl
 
 WDIR=$DATADIR/ncbi/current
 
-if [ -s "$WDIR/tmp/renamed-ncbi.txt" ]
+if [ -s "/tmp/renamed-ncbi.txt" ]
 then
-mv "$WDIR/All_Data.gene_info" "$WDIR/tmp/All_Data.gene_info.or"
+mv "$WDIR/All_Data.gene_info" "$WDIR/All_Data.gene_info.or"
 read
-mv "$WDIR/tmp/renamed-ncbi.txt" "$WDIR/All_Data.gene_info"
+mv "/tmp/renamed-ncbi.txt" "$WDIR/All_Data.gene_info"
 read
 echo "NCBI Gene updated!"
 else
