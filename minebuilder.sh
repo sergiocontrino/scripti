@@ -178,6 +178,19 @@ then
 	fi
 fi
 
+if [ $DSONLY = "y" ]
+then
+  interacts "Get gene summaries"
+  
+  if [ $REPLY -a $REPLY != 's' ]
+	then
+		echo "running get_refseq_summaries.py.."
+		geneSummaries
+	else
+		echo "skipping.."
+	fi
+fi
+
 }
 
 
@@ -214,22 +227,40 @@ function updateNCBI {
 cd $SHDIR
 
 echo "Running perl script adding ensembl ids..."
-#./bio/humanmine/ncbi-update.pl
+./bio/humanmine/ncbi-update.pl
 
 WDIR=$DATADIR/ncbi/current
 
 if [ -s "/tmp/renamed-ncbi.txt" ]
 then
-mv "$WDIR/All_Data.gene_info" "$WDIR/All_Data.gene_info.or"
-read
 mv "/tmp/renamed-ncbi.txt" "$WDIR/All_Data.gene_info"
-read
 echo "NCBI Gene updated!"
 else
 echo "ERROR, please check $WDIR"
 fi
 }
 
+function geneSummaries { 
+
+WDIR=$DATADIR/ncbi/gene-summaries
+
+cd $WDIR
+
+NOW=`date "+%Y-%m-%d"`
+mkdir $NOW
+
+rm current
+ln -s $NOW current
+
+cd $SHDIR
+
+FIN=$DATADIR/ncbi/gene-info-human/current/Homo_sapiens.gene_info
+FOUT=$WDIR/current/gene_summaries.txt
+
+echo "Running python script getting gene summaries..."
+./bio/get_refseq_summaries.py $FIN $FOUT 
+
+}
 
 
 
