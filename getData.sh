@@ -35,22 +35,17 @@ function usage () {
 	cat <<EOF
 
 Usage:
-$progname [-F] [-H] [-S] [-M] [-d] [-i] [-s] [-r release]
-  -F: build flymine
-  -H: build humanmine
-  -M: just do the sitemap
+$progname [-F] [-H] [-S] [-i]
+  -F: just get flymine sources
+  -H: just get humanmine sources
   -S: just get the sources (no build)
-  -d: no checking of sources for update
-  -r: the release number
-	-i: interactive mode
-	-s: no swapping of build db (for example after a build fail)
-	-v: verbode mode
+  -i: interactive mode
+  -v: verbode mode
 
 examples:
 
 $progname			do the release without asking for permission..
 $progname -i      		interactive version (for step by step release)
-$progname -s      		do the release without swapping db
 $progname -is      		interactive version without swapping
 
 EOF
@@ -63,11 +58,7 @@ while getopts "FHSMdisnfr:" opt; do
         F )  echo "- building FLYMINE" ; MINE=flymine;;
         H )  echo "- building HUMANMINE" ; MINE=humanmine;;        
         S )  echo "- Just updating sources (no build)" ; DSONLY=y;;
-        M )  echo "- Just do the sitemap" ; MAPONLY=y;;
-	    d )  echo "- Don't mirror sources" ; GETDATA=n;;
 	    i )  echo "- Interactive mode" ; INTERACT=y;;
-        s )  echo "- Don't swap db" ; SWAP=n;;
-        n )  echo "- Don't build the mine"; BUILD=n;;
         f )  echo "- Build FLYBASE"; FLYBASE=y;;
       	r )  REL=$OPTARG; echo "- Using release $REL";;
         h )  usage ;;
@@ -92,7 +83,7 @@ SHDIR=$CODEDIR/intermine-scripts
 DUMPDIR=/micklem/dumps/humanmine
 
 
-# TODO: check you are the rigth (humanbuild) user
+# TODO: check user? not for getting sources
 
 
 function interact {
@@ -173,7 +164,7 @@ then
   if [ $REPLY -a $REPLY != 's' ]
 	then
 		echo "running get_refseq_summaries.py.."
-		geneSummaries
+		getGeneSummaries
 	else
 		echo "skipping.."
 	fi
@@ -228,7 +219,7 @@ fi
 }
 
 function updateNCBI { 
-
+	
 cd $SHDIR
 
 echo "Running perl script adding ensembl ids..."
@@ -245,7 +236,7 @@ echo "ERROR, please check $WDIR"
 fi
 }
 
-function geneSummaries { 
+function getGeneSummaries { 
 
 WDIR=$DATADIR/ncbi/gene-summaries
 
@@ -301,8 +292,67 @@ ls -la
 }
 
 
-function donothing {
-echo "Just printing..."
+function getNCBIfasta { 
+
+WDIR=/micklem/data/human/fasta
+
+cd $WDIR
+
+URI1="ftp://ftp.ncbi.nlm.nih.gov/genomes/refseq/vertebrate_mammalian/"
+URI2="Homo_sapiens/reference/GCF_000001405.39_GRCh38.p13/"
+URI3="GCF_000001405.39_GRCh38.p13_assembly_structure/Primary_Assembly"
+
+# we assume these always change
+
+NOW=`date "+%Y-%m-%d"`
+mkdir $NOW
+cd $NOW
+wget "$URI1$URI2$URI3"/assembled_chromosomes/FASTA/*
+gzip -d *
+
+cd $WDIR
+
+rm current
+
+ln -s $NOW current
+
+echo "NCBI fasta updated!"
+}
+
+
+function getNCBIgff { 
+
+WDIR=/micklem/data/human/gff
+
+cd $WDIR
+
+URI1="ftp://ftp.ncbi.nlm.nih.gov/genomes/refseq/vertebrate_mammalian/"
+URI2="Homo_sapiens/reference/GCF_000001405.39_GRCh38.p13/"
+FILE="GCF_000001405.39_GRCh38.p13_genomic.gff.gz"
+
+# to check if there is change
+B4=`stat $FILE | grep Change`
+
+wget -N "$URI1$URI2$FILE"
+
+A3=`stat $FILE | grep Change`
+
+if [ "$B4" != "$A3" ]
+then
+
+NOW=`date "+%Y%m%d"`
+mkdir $NOW
+cp $FILE $NOW
+gzip -d $NOW/$FILE
+
+rm current
+
+ln -s $NOW current
+
+echo "NCBI Gene updated!"
+else
+echo "NCBI Gene was already up to date, not retrieved."
+fi
 }
 
 
@@ -365,41 +415,6 @@ echo "BDGP has not been updated."
 fi
 }
 
-function getNCBIgff { 
-
-WDIR=/micklem/data/human/gff
-
-cd $WDIR
-
-URI1="ftp://ftp.ncbi.nlm.nih.gov/genomes/refseq/vertebrate_mammalian/"
-URI2="Homo_sapiens/reference/GCF_000001405.39_GRCh38.p13/"
-FILE="GCF_000001405.39_GRCh38.p13_genomic.gff.gz"
-
-# to check if there is change
-B4=`stat $FILE | grep Change`
-
-wget -N "$URI1$URI2$FILE"
-
-A3=`stat $FILE | grep Change`
-
-if [ "$B4" != "$A3" ]
-then
-
-NOW=`date "+%Y%m%d"`
-mkdir $NOW
-cp $FILE $NOW
-gzip -d $NOW/$FILE
-
-rm current
-
-ln -s $NOW current
-
-echo "NCBI Gene updated!"
-else
-echo "NCBI Gene was already up to date, not retrieved."
-fi
-}
-
 
 function getHPO { 
 
@@ -453,36 +468,6 @@ fi
 }
 
 
-
-function getNCBIfasta { 
-
-WDIR=/micklem/data/human/fasta
-
-cd $WDIR
-
-URI1="ftp://ftp.ncbi.nlm.nih.gov/genomes/refseq/vertebrate_mammalian/"
-URI2="Homo_sapiens/reference/GCF_000001405.39_GRCh38.p13/"
-URI3="GCF_000001405.39_GRCh38.p13_assembly_structure/Primary_Assembly"
-
-# we assume these always change
-
-NOW=`date "+%Y-%m-%d"`
-mkdir $NOW
-cd $NOW
-wget "$URI1$URI2$URI3"/assembled_chromosomes/FASTA/*
-gzip -d *
-
-cd $WDIR
-
-rm current
-
-ln -s $NOW current
-
-echo "NCBI fasta updated!"
-}
-
-
-
 function getFB { 
 # TODO check you are on mega2
 
@@ -512,6 +497,11 @@ cat FB* | gunzip | psql -h mega2 -U flymine -d $FB
 # it increases db size (then get back again) check if worth it. long: 9h!
 #vacuumdb -f -z -v -h mega2 -U flymine -d $FB
 
+}
+
+
+function donothing {
+echo "Just printing..."
 }
 
 
