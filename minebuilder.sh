@@ -298,10 +298,10 @@ F1=ftp.ebi.ac.uk/pub/databases/interpro/current/match_complete.xml.gz
 F2=ftp.ebi.ac.uk/pub/databases/interpro/current/protein2ipr.dat.gz
 
 echo "Getting match_complete file from interpro..."
-wget $F1
+wget -t 0 $F1
 
 echo "Getting protein2ipr file from interpro..."
-wget $F2
+wget -t 0 $F2
 
 echo "Expanding files.."
 gzip -d *.gz
