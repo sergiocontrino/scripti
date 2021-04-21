@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# usage: minebuilder.sh          batch mode NB: builds flymine by default
-#        minebuilder.sh -H     batch mode, builds humanmine
-#        minebuilder.sh -i       interactive (crude step by step) mode
+# usage: getData.sh          batch mode NB: builds flymine by default
+#        getData.sh -H       batch mode, builds humanmine
+#        getData.sh -i       interactive (crude step by step) mode
 #
 
 # TODO: exit if wrong switchs combination
@@ -12,15 +12,13 @@
 #                  - gzip must check files integrity first/retry in case 
 #       transform this into a get sources script (to be called by a 
 #       buildmine one), remove switches (NB GETDATA)
+#       prot2Dom: mirror?
 
 
 # default settings: edit with care
 INTERACT=n       # y: step by step interaction
-SWAP=n           # y: swap db
 GETDATA=n        # y: run the download script?
 DSONLY=n         # y: just update the sources (don't build)
-MAPONLY=n        # y: just do the sitemap (just that!)
-BUILD=y          # n: don't run the build
 FLYBASE=n        # y: get FB files and build FB db
 
 
@@ -120,16 +118,6 @@ fi
 }
 
 
-function swap {
-# to change build db
-#
-# not needed until we add the webapp release
-# see docovid
-#
-
-echo "NOT IMPLEMENTED YET"
-
-}
 
 function getSources {
 # get the data
@@ -281,6 +269,8 @@ echo "Running python script getting gene summaries..."
 
 
 function getProt2Dom { 
+# using wget -t 0 to set retry number to no limit
+# TODO: add a wget -c -t 0 if interruption happens
 
 WDIR=$DATADIR/interpro/match_complete
 
@@ -525,42 +515,6 @@ cat FB* | gunzip | psql -h mega2 -U flymine -d $FB
 }
 
 
-
-
-function buildmine { 
-# TODO check you are on mega2
-
-cd $MINEDIR
-
-# TODO mv all logs in a dir $MINEDIR/ark/$PREVREL
-#export JAVA_HOME=""
-
-
-# check if success
-./project_build -b -v localhost $DUMPDIR/$MINE$REL\
-|| { printf "%b" "\n  build FAILED!\n" ; exit 1 ; }
-
-# if not on production machine you don't need: 
-#./gradlew postProcess -Pprocess=create-autocomplete-index
-#./gradlew postProcess -Pprocess=create-search-index
-#
-# TODO rm from build project.xml?
-}
-
-
-
-function makeSitemaps {
-# build and position the sitemaps
-#
-# possibly needed? only after adding webapp release..
-# check docovid
-#
-
-echo "NOT IMPLEMENTED YET"
-
-}
-
-
 #
 # main..
 #
@@ -572,18 +526,7 @@ then
   exit;
 fi
 
-if [ $MAPONLY = "y" ]
-then
-  interact "Just make the sitemaps please"
-  makeSitemaps
-  exit;
-fi
 
-if [ $SWAP = "y" ]
-then
-   interact "Swapping build db"
-   swap
-fi
 
 if [ $GETDATA = "y" ]
 then
@@ -609,20 +552,3 @@ interact "Building FLYBASE db.."
 getFB
 fi
 
-
-if [ $BUILD = "y" ]
-then
-interact "Building $MINE $REL .."
-#donothing
-buildmine
-fi
-
-
-
-#interact "Deploying"
-
-#./gradlew cargoRedeployRemote
-
-#interact "Making the sitemaps"
-
-#makeSitemaps
