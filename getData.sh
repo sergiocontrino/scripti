@@ -18,11 +18,11 @@
 # default settings: edit with care
 INTERACT=n       # y: step by step interaction
 GETDATA=n        # y: run the download script?
-DSONLY=n         # y: just update the sources (don't build)
+DSONLY=y         # y: just update the sources (don't build)
 FLYBASE=n        # y: get FB files and build FB db
 
 
-MINE=flymine
+MINE="na"
 REL=""
   
 
@@ -57,7 +57,7 @@ while getopts "FHSMdisnfr:" opt; do
    case $opt in
         F )  echo "- building FLYMINE" ; MINE=flymine;;
         H )  echo "- building HUMANMINE" ; MINE=humanmine;;        
-        S )  echo "- Just updating sources (no build)" ; DSONLY=y;;
+        n )  echo "- Not updating sources" ; DSONLY=n;;
 	    i )  echo "- Interactive mode" ; INTERACT=y;;
         f )  echo "- Build FLYBASE"; FLYBASE=y;;
       	r )  REL=$OPTARG; echo "- Using release $REL";;
@@ -117,7 +117,7 @@ function getSources {
 # or should we change to use wget and a mirroring system?
 #
 
-if [ $DSONLY = "y" ]
+if [ $INTERACT = "y" ]
 then
   interacts "Get human FASTA please"
   
@@ -128,9 +128,12 @@ then
 	else
 		echo "skipping.."
 	fi
+else
+  echo "running getNCBIfasta.."
+  getNCBIfasta
 fi
 
-if [ $DSONLY = "y" ]
+if [ $INTERACT = "y" ]
 then
   interacts "Get human GFF please"
   
@@ -141,10 +144,13 @@ then
 	else
 		echo "skipping.."
 	fi
+else
+  echo "running getNCBIgff.."
+  getNCBIgff
 fi
 
 
-if [ $DSONLY = "y" ]
+if [ $INTERACT = "y" ]
 then
   interacts "Update NCBI (add ensembl IDs)"
   
@@ -155,9 +161,12 @@ then
 	else
 		echo "skipping.."
 	fi
+else
+  echo "running updateNCBI.."
+  updateNCBI
 fi
 
-if [ $DSONLY = "y" ]
+if [ $INTERACT = "y" ]
 then
   interacts "Get gene summaries"
   
@@ -168,11 +177,15 @@ then
 	else
 		echo "skipping.."
 	fi
+else
+		echo "running get_refseq_summaries.py.."
+		getGeneSummaries
+
 fi
 
-if [ $DSONLY = "y" ]
+if [ $INTERACT = "y" ]
 then
-  interacts "Get protein to domain data"
+  interacts "Get protein to domain data, takes a long time!"
   
   if [ $REPLY -a $REPLY != 's' ]
 	then
@@ -181,42 +194,74 @@ then
 	else
 		echo "skipping.."
 	fi
+else
+		echo "getting data.."
+		getProt2Dom
 fi
 
 
+if [ $INTERACT = "y" ]
+then
+  interacts "Get phenotype annotation (HPO)"
+  
+  if [ $REPLY -a $REPLY != 's' ]
+	then
+		echo "getting HPO.."
+		getHPO
+	else
+		echo "skipping.."
+	fi
+else
+        echo "getting HPO.."
+		getHPO
+fi
 
-echo "bye!"
+echo "-----------------------------------------------------"
+echo
+
+}
+
+function getFlySources {
+# get the data for flymine
+# 
+#
+
+if [ $INTERACT = "y" ]
+then
+  interacts "Get BDGP please"
+  
+  if [ $REPLY -a $REPLY != 's' ]
+	then
+		echo "running getBDGP.."
+		getBDGP
+	else
+		echo "skipping.."
+	fi
+else
+  echo "running getBDGP.."
+  getBDGP
+fi
+
+if [ $INTERACT = "y" ]
+then
+  interacts "Get FlyBase please"
+  
+  if [ $REPLY -a $REPLY != 's' ]
+	then
+		echo "running getFB.."
+		getFB
+	else
+		echo "skipping.."
+	fi
+else
+  echo "running getFB.."
+  getFB
+fi
+
 
 }
 
 
-function getSourcesInBatch {
-
-if [ $DSONLY = "y" ]
-then
-  interact "Get Human FASTA please"
-  getNCBIfasta
-else
-  continue
-fi
-
-if [ $DSONLY = "y" ]
-then
-  interact "Get Human GFF please"
-  getNCBIgff
-else
-  continue
-fi
-
-if [ $DSONLY = "y" ]
-then
-  interact "Update NCBI (add ensembl IDs)"
-  updateNCBI
-else
-  continue
-fi
-
-}
 
 function updateNCBI { 
 	
@@ -258,7 +303,6 @@ echo "Running python script getting gene summaries..."
 
 }
 
-
 function getProt2Dom { 
 # using wget -t 0 to set retry number to no limit
 # TODO: add a wget -c -t 0 if interruption happens
@@ -291,7 +335,6 @@ ls -la
 
 }
 
-
 function getNCBIfasta { 
 
 WDIR=/micklem/data/human/fasta
@@ -318,7 +361,6 @@ ln -s $NOW current
 
 echo "NCBI fasta updated!"
 }
-
 
 function getNCBIgff { 
 
@@ -354,6 +396,7 @@ else
 echo "NCBI Gene was already up to date, not retrieved."
 fi
 }
+
 
 
 function getBDGP { 
@@ -415,7 +458,6 @@ echo "BDGP has not been updated."
 fi
 }
 
-
 function getHPO { 
 
 WDIR=/micklem/data/hpo
@@ -461,12 +503,11 @@ rm current
 
 ln -s $NOW current
 
-echo "NCBI Gene updated!"
+echo "HPO: gene updated!"
 else
-echo "NCBI Gene has not been updated."
+echo "HPO: gene has not been updated."
 fi
 }
-
 
 function getFB { 
 # TODO check you are on mega2
@@ -511,34 +552,25 @@ echo "Just printing..."
 
 if [ $DSONLY = "y" ]
 then
-  interact "Just update sources please"
+  interact "Update sources (NCBI, protein domanins, HPO)"
   getSources
-  exit;
 fi
 
+if [ $MINE = "flymine" ]
+then
+  interact "Update FlyBase and BDGP"
+  getFlySources
+fi
+
+echo "bye!"
+
+exit;
 
 
 if [ $GETDATA = "y" ]
 then
    interact "Getting sources"
-   echo "Starting with BDGP.."
-   getBDGP
-   echo "Human gff (NCBI gene)"
-   getNCBIgene
-   echo "Human fasta (NCBI fasta)"
-   getNCBIfasta
+echo "Add datadownloader here.."
    
-   echo "Phenotypes HPO"
-   getHPO
-   
-   getSources
-fi
-
-
-if [ $FLYBASE = "y" ]
-then
-interact "Building FLYBASE db.."
-#donothing
-getFB
 fi
 
