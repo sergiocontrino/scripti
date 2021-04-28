@@ -63,8 +63,9 @@ fi
 #
 
 
-cd $COVDIR
+cd "$COVIDIR"
 
+pwd
 ls -la
 
 interact "Running ncbi grabber.."
