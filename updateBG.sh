@@ -1,6 +1,9 @@
 #!/bin/bash
 #
 
+echo "running now: "
+sudo docker ps -aq
+
 echo; echo "update docker"
 sudo docker pull intermine/bluegenes:latest
 
