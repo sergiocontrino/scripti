@@ -31,7 +31,7 @@ EOF
 }
 
 
-while getopts "SMdis" opt; do
+while getopts "i" opt; do
    case $opt in
         i )  echo "- Interactive mode" ; INTERACT=y;;
         h )  usage ;;
@@ -42,7 +42,8 @@ done
 shift $(($OPTIND - 1))
 
 DATADIR=/micklem/data/covid
-COVIDIR=/micklem/data/thalemine/git/ncbi-sequence-grabber
+#COVIDIR=/micklem/data/thalemine/git/ncbi-sequence-grabber
+COVIDIR=/data/code/ncbi-sequence-grabber
 SEQFILE=sequences.fasta
 
 
