@@ -77,6 +77,8 @@ npm start
 
 if [ -s "./$SEQFILE" ]
 then
+interact "Moving sequence file in place"
+
 mv $SEQFILE $DATADIR/fasta/ncbi.fasta
 else
 echo "ERROR running grabber, please try again"
