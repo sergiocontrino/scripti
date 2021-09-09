@@ -18,7 +18,6 @@
 # default settings: edit with care
 INTERACT=n       # y: step by step interaction
 GETDATA=n        # y: run the download script?
-DSONLY=y         # y: just update the sources (don't build)
 FLYBASE=n        # y: get FB files and build FB db
 
 
@@ -38,7 +37,6 @@ Usage:
 $progname [-F] [-H] [-S] [-i]
   -F: just get flymine sources
   -H: just get humanmine sources
-  -S: just get the sources (no build)
   -i: interactive mode
   -v: verbode mode
 
@@ -53,12 +51,12 @@ EOF
 }
 
 
-while getopts "FHSMdisnfr:" opt; do
+while getopts "FHSMdisfr:" opt; do
    case $opt in
-        F )  echo "- building FLYMINE" ; MINE=flymine;;
-        H )  echo "- building HUMANMINE" ; MINE=humanmine;;        
-        n )  echo "- Not updating sources" ; DSONLY=n;;
+        F )  echo "- just FLYMINE sources" ; MINE=flymine;;
+        H )  echo "- just HUMANMINE sources" ; MINE=humanmine;;
 	    i )  echo "- Interactive mode" ; INTERACT=y;;
+        d )  echo "- Run DataDownloader"; GETDATA=y;;
         f )  echo "- Build FLYBASE"; FLYBASE=y;;
       	r )  REL=$OPTARG; echo "- Using release $REL";;
         h )  usage ;;
@@ -77,11 +75,7 @@ DATADIR=/micklem/data
 CODEDIR=$DATADIR/thalemine/git
 
 MINEDIR=$CODEDIR/$MINE
-SMSDIR=$CODEDIR/intermine-sitemaps
 SHDIR=$CODEDIR/intermine-scripts
-
-DUMPDIR=/micklem/dumps/humanmine
-
 
 # TODO: check user? not for getting sources
 
@@ -111,11 +105,9 @@ fi
 
 
 function getSources {
-# get the data
-# 
-# run datadownloader...
-# or should we change to use wget and a mirroring system?
 #
+# get sources not in the DataDownloader
+# 
 
 if [ $INTERACT = "y" ]
 then
@@ -228,6 +220,23 @@ function getFlySources {
 
 if [ $INTERACT = "y" ]
 then
+  interacts "Get FlyBase please"
+  
+  if [ $REPLY -a $REPLY != 's' ]
+	then
+		echo "running getFB.."
+		getFB
+	else
+		echo "skipping.."
+	fi
+else
+  echo "running getFB.."
+  getFB
+fi
+
+
+if [ $INTERACT = "y" ]
+then
   interacts "Get BDGP please"
   
   if [ $REPLY -a $REPLY != 's' ]
@@ -242,21 +251,6 @@ else
   getBDGP
 fi
 
-if [ $INTERACT = "y" ]
-then
-  interacts "Get FlyBase please"
-  
-  if [ $REPLY -a $REPLY != 's' ]
-	then
-		echo "running getFB.."
-		getFB
-	else
-		echo "skipping.."
-	fi
-else
-  echo "running getFB.."
-  getFB
-fi
 
 
 }
@@ -404,7 +398,7 @@ function getBDGP {
 
 BDGPDIR=/micklem/data/flymine/bdgp-insitu
 
-cd $BDGP/mysql
+cd $BDGPDIR/mysql
 
 # to check if there is change
 B4=`stat insitu.sql.gz | grep Change`
@@ -525,14 +519,24 @@ wget ftp://ftp.flybase.net/releases/current/psql/*
 
 # check md5?
 
-# create new fb db (TODO: remove old one?)
-# TODO: actually keep a constant name (flybase) for the build properties
+# old version, keeping FB version number in postgres 
+#FB=`grep createdb README | cut -d' ' -f5`
+#createdb -h localhost -U flymine $FB
+#cat FB* | gunzip | psql -h mega2 -U flymine -d $FB
 
-FB=`grep createdb README | cut -d' ' -f5`
-createdb -h localhost -U flymine $FB
+# create new fb db 
+# keeping a constant name (flybase) for the build properties
+
+echo "Dropping old flybase.."
+dropdb -h localhost -U flymine flybase
+
+echo "Creating new flybase.."
+createdb -h localhost -U flymine flybase
+
+echo "..and loading it (long, ~10h)"
 
 # load - long ~10h?
-cat FB* | gunzip | psql -h mega2 -U flymine -d $FB
+cat FB* | gunzip | psql -h mega2 -U flymine -d flybase
 
 # do the vacuum (analyse) (new step, check if it improves build times)
 # it increases db size (then get back again) check if worth it. long: 9h!
@@ -550,13 +554,25 @@ echo "Just printing..."
 # main..
 #
 
-if [ $DSONLY = "y" ]
+# to test bgdp
+if [ $FLYBASE = "y" ]
+then
+  interact "Update BDGP"
+  getBDGP
+echo "bye!"
+  exit
+fi
+
+
+
+
+if [ $MINE != "flymine" ]
 then
   interact "Update sources (NCBI, protein domanins, HPO)"
   getSources
 fi
 
-if [ $MINE = "flymine" ]
+if [ $MINE != "humanmine" ]
 then
   interact "Update FlyBase and BDGP"
   getFlySources
