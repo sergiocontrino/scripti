@@ -376,7 +376,7 @@ A3=`stat $FILE | grep Change`
 if [ "$B4" != "$A3" ]
 then
 
-NOW=`date "+%Y%m%d"`
+NOW=`date "+%Y-%m-%d"`
 mkdir $NOW
 cp $FILE $NOW
 gzip -d $NOW/$FILE
@@ -510,9 +510,13 @@ FBDIR=/data/fb
 
 cd $FBDIR
 
-rm FB*
-rm md5sum.txt
-rm README
+# saving previous download for the moment
+NOW=`date "+%Y-%m-%d"`
+mkdir $NOW
+
+mv FB* $NOW
+mv md5sum.txt $NOW
+mv README $NOW
 
 # ~15 mins
 wget ftp://ftp.flybase.net/releases/current/psql/*
@@ -528,10 +532,19 @@ wget ftp://ftp.flybase.net/releases/current/psql/*
 # keeping a constant name (flybase) for the build properties
 
 echo "Dropping old flybase.."
-dropdb -h localhost -U flymine flybase
+dropdb -h localhost -U flymine flybaseprevious
+
+read
+
+echo "Renaming last flybase.."
+psql -h localhost -d items-flymine -U flymine -c "alter database flybase rename to flybaseprevious;"
+
+read
 
 echo "Creating new flybase.."
 createdb -h localhost -U flymine flybase
+
+read
 
 echo "..and loading it (long, ~10h)"
 
