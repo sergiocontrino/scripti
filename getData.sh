@@ -19,14 +19,20 @@
 INTERACT=n       # y: step by step interaction
 GETDATA=n        # y: run the download script?
 FLYBASE=n        # y: get FB files and build FB db
+DBHOST=localhost     # you can enter a different server 
 
 
+DATADIR=/micklem/data
+
+#CODEDIR=/data/code
+CODEDIR=$DATADIR/thalemine/git
+SHDIR=$CODEDIR/intermine-scripts
+
+# to rm
 MINE="na"
 REL=""
-  
+MINEDIR=$CODEDIR/$MINE
 
-# tmp until we fix .bashrc
-#export JAVA_HOME=""
 
 progname=$0
 
@@ -34,31 +40,33 @@ function usage () {
 	cat <<EOF
 
 Usage:
-$progname [-F] [-H] [-S] [-i]
+$progname [-F] [-H] [-i] [-S server]
   -F: just get flymine sources
   -H: just get humanmine sources
   -i: interactive mode
-  -v: verbode mode
+  -S: choose the database server (default mega2)
 
 examples:
 
-$progname			do the release without asking for permission..
-$progname -i      		interactive version (for step by step release)
-$progname -is      		interactive version without swapping
+$progname			    get sources, no questions
+$progname -i      		interactive version (source by source)
+$progname -iH      		interactive version, only HumanMine sources
+$progname -S mega3      use mega3 as the database server
+
 
 EOF
 	exit 0
 }
 
 
-while getopts "FHSMdisfr:" opt; do
+while getopts "FHMdiS:" opt; do
    case $opt in
         F )  echo "- just FLYMINE sources" ; MINE=flymine;;
         H )  echo "- just HUMANMINE sources" ; MINE=humanmine;;
 	    i )  echo "- Interactive mode" ; INTERACT=y;;
         d )  echo "- Run DataDownloader"; GETDATA=y;;
         f )  echo "- Build FLYBASE"; FLYBASE=y;;
-      	r )  REL=$OPTARG; echo "- Using release $REL";;
+      	S )  DBHOST=$OPTARG; echo "- Using database server $DBHOST";;
         h )  usage ;;
 	    \?)  usage ;;
    esac
@@ -67,14 +75,6 @@ done
 shift $(($OPTIND - 1))
 
 
-DATADIR=/micklem/data
-
-#CODEDIR=/data/code
-CODEDIR=$DATADIR/thalemine/git
-MINEDIR=$CODEDIR/$MINE
-SHDIR=$CODEDIR/intermine-scripts
-
-DBHOST=mega2
 
 # TODO: check user? not for getting sources
 
@@ -504,9 +504,9 @@ fi
 }
 
 function getFB { 
-# TODO check you are on mega2
 
-FBDIR=/data/fb
+#FBDIR=/data/fb
+FBDIR=/micklem/data/flybase
 
 cd $FBDIR
 
@@ -514,9 +514,7 @@ cd $FBDIR
 NOW=`date "+%Y-%m-%d"`
 mkdir $NOW
 
-mv FB* $NOW
-mv md5sum.txt $NOW
-mv README $NOW
+cd $NOW
 
 # ~15 mins
 wget ftp://ftp.flybase.net/releases/current/psql/*
@@ -532,12 +530,15 @@ wget ftp://ftp.flybase.net/releases/current/psql/*
 # keeping a constant name (flybase) for the build properties
 
 echo "Dropping old flybase.."
+read
 dropdb -h  $DBHOST -U flymine flybaseprevious
 
 echo "Renaming last flybase.."
+read
 psql -h $DBHOST -d items-flymine -U flymine -c "alter database flybase rename to flybaseprevious;"
 
 echo "Creating new flybase.."
+read
 createdb -h $DBHOST -U flymine flybase
 
 echo "..and loading it (long, ~10h)"
