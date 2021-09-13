@@ -67,15 +67,14 @@ done
 shift $(($OPTIND - 1))
 
 
-PDIR=$HOME/.intermine
-
 DATADIR=/micklem/data
 
 #CODEDIR=/data/code
 CODEDIR=$DATADIR/thalemine/git
-
 MINEDIR=$CODEDIR/$MINE
 SHDIR=$CODEDIR/intermine-scripts
+
+DBHOST=mega2
 
 # TODO: check user? not for getting sources
 
@@ -394,7 +393,8 @@ fi
 
 
 function getBDGP { 
-# TODO check you are on mega2
+# WORKING on modalone
+# TODO mv to mega3 (setup mysql)
 
 BDGPDIR=/micklem/data/flymine/bdgp-insitu
 
@@ -423,7 +423,7 @@ mysql -u flymine -p -e "CREATE DATABASE bdgp$NOW;"
 mysql -u flymine bdgp$NOW < $BDGPDIR/$NOW/insitu.sql
 
 # run query
-# TODO: change mysql conf to allow dumpiong of files in BDGP dir
+# TODO: change mysql conf to allow dumping of files in BDGP dir
 
 EXPDIR="/var/lib/mysql-files/" 
 
@@ -486,7 +486,7 @@ fi
 
 if [ "$CFLAG" = "y" ]
 then
-# cp, expand and load into mysql, query and update annotation file
+# cp and expand
 
 NOW=`date "+%Y%m%d"`
 mkdir $NOW
@@ -532,24 +532,18 @@ wget ftp://ftp.flybase.net/releases/current/psql/*
 # keeping a constant name (flybase) for the build properties
 
 echo "Dropping old flybase.."
-dropdb -h localhost -U flymine flybaseprevious
-
-read
+dropdb -h  $DBHOST -U flymine flybaseprevious
 
 echo "Renaming last flybase.."
-psql -h localhost -d items-flymine -U flymine -c "alter database flybase rename to flybaseprevious;"
-
-read
+psql -h $DBHOST -d items-flymine -U flymine -c "alter database flybase rename to flybaseprevious;"
 
 echo "Creating new flybase.."
-createdb -h localhost -U flymine flybase
-
-read
+createdb -h $DBHOST -U flymine flybase
 
 echo "..and loading it (long, ~10h)"
 
 # load - long ~10h?
-cat FB* | gunzip | psql -h mega2 -U flymine -d flybase
+cat FB* | gunzip | psql -h $DBHOST -U flymine -d flybase
 
 # do the vacuum (analyse) (new step, check if it improves build times)
 # it increases db size (then get back again) check if worth it. long: 9h!
