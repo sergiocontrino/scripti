@@ -1,35 +1,35 @@
 #!/bin/bash
 #
-# usage: getData.sh          batch mode NB: builds flymine by default
-#        getData.sh -H       batch mode, builds humanmine
+# usage: getData.sh          batch mode updates  
+#        getData.sh -F       batch mode, only Flybase
 #        getData.sh -i       interactive (crude step by step) mode
 #
 
-# TODO: exit if wrong switchs combination
+# TODO 
+#       exit if wrong switchs combination!
 #
-#       add switch for BDGP
+#       BDGP : - add switch?
+#              - currently using mysql db in modalone! setup mysql in mega3           
 #       NCBIfasta: - mirror?
-#                  - gzip must check files integrity first/retry in case 
-#       transform this into a get sources script (to be called by a 
-#       buildmine one), remove switches (NB GETDATA)
+#                  - gzip must check files integrity first/retry 
 #       prot2Dom: mirror?
 
 
 # default settings: edit with care
 INTERACT=n       # y: step by step interaction
-GETDATA=n        # y: run the download script?
-FLYBASE=n        # y: get FB files and build FB db
-DBHOST=localhost     # you can enter a different server 
+DD=n             # y: run the download script?
+FB=n             # y: get FB files and build FB db
+UP=y             # n: don't run various updates and downloads
+DBHOST=localhost # you can enter a different server 
 
 
 DATADIR=/micklem/data
 
-#CODEDIR=/data/code
-CODEDIR=$DATADIR/thalemine/git
+CODEDIR=/data/code
+#CODEDIR=$DATADIR/thalemine/git
 SHDIR=$CODEDIR/intermine-scripts
 
 # to rm
-MINE="na"
 REL=""
 MINEDIR=$CODEDIR/$MINE
 
@@ -40,32 +40,39 @@ function usage () {
 	cat <<EOF
 
 Usage:
-$progname [-F] [-H] [-i] [-S server]
-  -F: just get flymine sources
-  -H: just get humanmine sources
+$progname [-F] [-f] [d] [u] [-i] [-S server]
+  -F: get ONLY flybase sources
+  -f: get flybase sources
+  -d: run DataDownloader
+  -u: run various updates and loads (default)
   -i: interactive mode
-  -S: choose the database server (default mega2)
+  -S: choose the database server (default localhost)
 
 examples:
 
-$progname			    get sources, no questions
-$progname -i      		interactive version (source by source)
-$progname -iH      		interactive version, only HumanMine sources
-$progname -S mega3      use mega3 as the database server
+$progname			    run updates/loads, no questions, no Flybase and DataDownloader
+$progname -d			as above, but run of DataDownloader
+$progname -i      		interactive version (source by source), default setting
+$progname -if      		interactive version (source by source), including flybase sources
+$progname -iF      		interactive version, get only flybase sources
+$progname -ifd     		interactive version, including running DataDownloader and flybase sources
+$progname -ifdu    		same as -ifd
 
+$progname -S mega3      use mega3 as the database server
 
 EOF
 	exit 0
 }
 
+echo "----------------------------"
 
-while getopts "FHMdiS:" opt; do
+while getopts "dFfiS:u" opt; do
    case $opt in
-        F )  echo "- just FLYMINE sources" ; MINE=flymine;;
-        H )  echo "- just HUMANMINE sources" ; MINE=humanmine;;
-	    i )  echo "- Interactive mode" ; INTERACT=y;;
-        d )  echo "- Run DataDownloader"; GETDATA=y;;
-        f )  echo "- Build FLYBASE"; FLYBASE=y;;
+        f )  echo "| - Get FLYBASE data       |" ; FB=y;;
+        d )  echo "| - Run DataDownloader     |" ; DD=y;;
+        u )  echo "| - update and get sources |" ; UP=y;;
+	    i )  echo "| - Interactive mode       |" ; INTERACT=y;;
+        F )  echo "| - get ONLY FLYBASE data  |" ; FB=y; DD=n; UP=n;;
       	S )  DBHOST=$OPTARG; echo "- Using database server $DBHOST";;
         h )  usage ;;
 	    \?)  usage ;;
@@ -74,7 +81,8 @@ done
 
 shift $(($OPTIND - 1))
 
-
+echo "----------------------------"
+echo
 
 # TODO: check user? not for getting sources
 
@@ -505,12 +513,11 @@ fi
 
 function getFB { 
 
-#FBDIR=/data/fb
 FBDIR=/micklem/data/flybase
 
 cd $FBDIR
 
-# saving previous download for the moment
+# saving previous downloads for the moment
 NOW=`date "+%Y-%m-%d"`
 mkdir $NOW
 
@@ -519,7 +526,7 @@ cd $NOW
 # ~15 mins
 wget ftp://ftp.flybase.net/releases/current/psql/*
 
-# check md5?
+# TODO: check md5?
 
 # old version, keeping FB version number in postgres 
 #FB=`grep createdb README | cut -d' ' -f5`
@@ -530,15 +537,12 @@ wget ftp://ftp.flybase.net/releases/current/psql/*
 # keeping a constant name (flybase) for the build properties
 
 echo "Dropping old flybase.."
-read
 dropdb -h  $DBHOST -U flymine flybaseprevious
 
 echo "Renaming last flybase.."
-read
 psql -h $DBHOST -d items-flymine -U flymine -c "alter database flybase rename to flybaseprevious;"
 
 echo "Creating new flybase.."
-read
 createdb -h $DBHOST -U flymine flybase
 
 echo "..and loading it (long, ~10h)"
@@ -558,29 +562,47 @@ echo "Just printing..."
 }
 
 
-#
-# main..
-#
+function runDataDownloader { 
 
-# to test bgdp
-if [ $FLYBASE = "y" ]
+cd $CODEDIR/intermine-scripts
+
+if [ $INTERACT = "y" ]
 then
-  interact "Update BDGP"
-  getBDGP
-echo "bye!"
-  exit
+  interacts "Run DataDownloader please"
+  
+  if [ $REPLY -a $REPLY != 's' ]
+	then
+		echo "running DataDownloader.."
+		perl bin/download_data -e intermine
+	else
+		echo "skipping.."
+	fi
+else
+  echo "running DataDownloader.."
+  perl bin/download_data -e intermine
 fi
 
+}
 
 
 
-if [ $MINE != "flymine" ]
+#############
+# main..
+#############
+
+if [ $DD = "y" ]
+then
+   interact "Running DataDownloader.."
+   runDataDownloader     
+fi
+
+if [ $UP = "y" ]
 then
   interact "Update sources (NCBI, protein domanins, HPO)"
   getSources
 fi
 
-if [ $MINE != "humanmine" ]
+if [ $FB = "y" ]
 then
   interact "Update FlyBase and BDGP"
   getFlySources
@@ -591,10 +613,4 @@ echo "bye!"
 exit;
 
 
-if [ $GETDATA = "y" ]
-then
-   interact "Getting sources"
-echo "Add datadownloader here.."
-   
-fi
 
