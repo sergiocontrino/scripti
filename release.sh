@@ -111,7 +111,7 @@ fi
 let PREL=$REL-1
 MINEDIR=$CODEDIR/$MINE
 
-#checkHost
+checkHost
 
 
 function interact {
