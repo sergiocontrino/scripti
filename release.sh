@@ -40,19 +40,19 @@ function usage () {
 	cat <<EOF
 
 Usage:
-$progname [-F] [-H] [-M] [-i] [-r release]
+$progname [-F] [-H] [-m] [-i] [-r release]
   -F: flymine
   -H: humanmine
-  -M: just do the sitemap
+  -m: just do the sitemap
   -r: the release number
   -i: interactive mode
-  -v: verbode mode
 
 examples:
 
-$progname -r 66 	    release flymine rel 66, no questions..
-$progname -i      		interactive version (for step by step release)
-$progname -Hir 18  		release humanmine release 18, interactive
+$progname 66            release flymine rel 66, no questions..
+$progname -r 66         release flymine rel 66, no questions..
+$progname -ir 66        interactive version (for step by step release)
+$progname -Hir 18       release humanmine release 18, interactive
 
 EOF
 	exit 0
@@ -60,11 +60,11 @@ EOF
 
 echo "----------------------------"
 
-while getopts "FHir:" opt; do
+while getopts "FHmir:" opt; do
    case $opt in
         F )  echo "| - building FLYMINE        |" ; MINE=flymine; HOST=mine-prod-1;;
         H )  echo "| - building HUMANMINE      |" ; MINE=humanmine; HOST=mine-prod-0;;        
-        M )  echo "| - Just do the sitemap     |" ; MAPONLY=y;;
+        m )  echo "| - Just do the sitemap     |" ; MAPONLY=y;;
 	    i )  echo "| - Interactive mode        |" ; INTERACT=y;;
       	r )  REL=$OPTARG; echo "| - Releasing $MINE$REL     |";;
         h )  usage ;;
@@ -72,9 +72,25 @@ while getopts "FHir:" opt; do
    esac
 done
 
+#REL=${@:$OPTIND:1}
+
 shift $(($OPTIND - 1))
 
 echo "----------------------------"
+
+
+if [ -z $REL ] 
+then
+REL=$1
+fi
+
+if [ -z $REL ] 
+then
+echo
+echo "ERROR: Please enter the new release number."
+echo
+exit;
+fi
 
 
 function checkHost {
@@ -98,20 +114,21 @@ fi
 }
 
 
-if [ -z $REL ] 
-then
-echo
-echo "ERROR: Please enter the new release number."
-echo
-exit;
-fi
+#checkHost
 
 
 # 2 more settings
 let PREL=$REL-1
 MINEDIR=$CODEDIR/$MINE
 
-checkHost
+echo "============================================="
+echo "|"
+echo "|    Releasing $MINE v$REL on $HOST"
+echo "|"
+echo "============================================="
+
+
+
 
 
 function interact {
@@ -150,10 +167,11 @@ echo "Creating $MINE$REL database.."
 createdb -h localhost -U $MINE $MINE$REL
 if [ -s $DUMPDIR/$MINE$REL.final ]
 then
-echo "Restoring data from the build dump $DUMPDIR/$MINE$REL.final..."
+echo "Restoring data from the build dump $DUMPDIR/$MINE$REL.final: "
 pg_restore -h localhost -U $MINE -d $MINE$REL $DUMPDIR/$MINE$REL.final
 else
 echo "dump file -- $DUMPDIR/$MINE$REL.final -- not found! exiting.."
+exit;
 fi
 	
 }
@@ -332,10 +350,10 @@ fi
 interacts "Building (restoring) $MINE$REL on $HOST" 
 dodb
 
-interacts "Write $MINE$REL properties" 
+interacts "Write $MINE rel$REL properties" 
 doprops
 
-interacts "Release $MINE$REL"
+interacts "Release $MINE$REL:    NB THIS STEP WILL INTERRUPT CURRENT RELEASE"
 dorel
 
 
