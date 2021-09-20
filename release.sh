@@ -290,17 +290,22 @@ cd $MINEDIR
 
 echo "Redeployng $MINE webapp with release $REL.."
 
-#./gradlew clean --stacktrace
-#./gradlew cargoRedeployRemote --stacktrace
+./gradlew clean --stacktrace
+./gradlew cargoRedeployRemote --stacktrace
 
 
 echo "Updating lucene indexes.."
-echo "autocomplete..."
-#./gradlew postprocess -Pprocess=create-autocomplete-index --stacktrace
-echo "search index..."
-#./gradlew postprocess -Pprocess=create-search-index --stacktrace
 
+echo "- autocomplete..."
+./gradlew postprocess -Pprocess=create-autocomplete-index --stacktrace
 
+echo "- search index..."
+./gradlew postprocess -Pprocess=create-search-index --stacktrace
+
+echo
+echo "Please check the release at https://www.flymine.org/flymine"
+echo "and at https://legacy.flymine.org/flymine/begin.do"
+echo
 }
 
 function archive {
