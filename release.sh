@@ -114,7 +114,7 @@ fi
 }
 
 
-#checkHost
+checkHost
 
 
 # 2 more settings
