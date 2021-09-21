@@ -221,7 +221,8 @@ if [ $INTERACT = "y" ]
 then 
   if [ $REPLY -a $REPLY != 's' ]
 	then
-		echo "Writing $MINE.properties.$REL.."
+		echo "Writing $MINE.properties.$REL in $PDIR.."
+		echo "Using rel $PREL properties"
 		writeProps
 	else
 		echo "skipping.."
@@ -310,11 +311,17 @@ function deploy {
 cd $MINEDIR
 
 echo "Redeployng $MINE webapp with release $REL.."
-
+echo
+echo "Running gradlew clean.."
+echo
 ./gradlew clean --stacktrace
+
+echo
+echo "Redeploying.."
+echo
 ./gradlew cargoRedeployRemote --stacktrace
 
-
+echo
 echo "Updating lucene indexes.."
 
 echo "- autocomplete..."
