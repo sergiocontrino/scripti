@@ -12,7 +12,7 @@
 INTERACT=n       # y: step by step interaction
 MAPONLY=n        # y: just do the sitemap (just that!)
 DOPROPS=n        # y: update properties file for the mine
-
+VERBOSE=""       # --stacktrace
 
 MINE=flymine   # default mine
 REL=""         # the new release
@@ -40,19 +40,26 @@ function usage () {
 	cat <<EOF
 
 Usage:
-$progname [-F] [-H] [-m] [-i] [-r release]
+$progname [-F] [-H] [-m] [-i] [-v] [-r release]
   -F: flymine
   -H: humanmine
   -m: just do the sitemap
   -r: the release number
   -i: interactive mode
+  -v: verbose mode
+
+
+Notes:
+- By default build flymine, batch  mode. 
+- Release is a required parameter, can be entered as a flag (-r) or as the first argument
 
 examples:
 
 $progname 66            release flymine rel 66, no questions..
 $progname -r 66         release flymine rel 66, no questions..
-$progname -ir 66        interactive version (for step by step release)
+$progname -iv 66        interactive (step by step) and verbose (stacktrace)
 $progname -Hir 18       release humanmine release 18, interactive
+
 
 EOF
 	exit 0
@@ -60,12 +67,13 @@ EOF
 
 echo "----------------------------"
 
-while getopts "FHmir:" opt; do
+while getopts "FHmir:v" opt; do
    case $opt in
         F )  echo "| - building FLYMINE        |" ; MINE=flymine; HOST=mine-prod-1;;
         H )  echo "| - building HUMANMINE      |" ; MINE=humanmine; HOST=mine-prod-0;;        
         m )  echo "| - Just do the sitemap     |" ; MAPONLY=y;;
 	    i )  echo "| - Interactive mode        |" ; INTERACT=y;;
+	    v )  echo "| - Verbose mode            |" ; VERBOSE='-- stacktrace';;
       	r )  REL=$OPTARG; echo "| - Releasing $MINE$REL     |";;
         h )  usage ;;
 	    \?)  usage ;;
@@ -76,8 +84,8 @@ done
 
 shift $(($OPTIND - 1))
 
-echo "----------------------------"
 
+echo "----------------------------"
 
 if [ -z $REL ] 
 then
@@ -291,8 +299,6 @@ function writeProps {
 #
 #
 
-echo $PDIR
-
 cd $PDIR
 cp $MINE.properties.$PREL $MINE.properties.$REL
 
@@ -314,21 +320,21 @@ echo "Redeployng $MINE webapp with release $REL.."
 echo
 echo "Running gradlew clean.."
 echo
-./gradlew clean --stacktrace
+./gradlew clean $VERBOSE
 
 echo
 echo "Redeploying.."
 echo
-./gradlew cargoRedeployRemote --stacktrace
+./gradlew cargoRedeployRemote $VERBOSE
 
 echo
 echo "Updating lucene indexes.."
 
 echo "- autocomplete..."
-./gradlew postprocess -Pprocess=create-autocomplete-index --stacktrace
+./gradlew postprocess -Pprocess=create-autocomplete-index $VERBOSE
 
 echo "- search index..."
-./gradlew postprocess -Pprocess=create-search-index --stacktrace
+./gradlew postprocess -Pprocess=create-search-index $VERBOSE
 
 echo
 echo "Please check the release at https://www.flymine.org/flymine"
