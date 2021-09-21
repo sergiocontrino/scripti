@@ -65,16 +65,15 @@ EOF
 	exit 0
 }
 
-echo "----------------------------"
-
+echo
 while getopts "FHmir:v" opt; do
    case $opt in
-        F )  echo "| - building FLYMINE        |" ; MINE=flymine; HOST=mine-prod-1;;
-        H )  echo "| - building HUMANMINE      |" ; MINE=humanmine; HOST=mine-prod-0;;        
-        m )  echo "| - Just do the sitemap     |" ; MAPONLY=y;;
-	    i )  echo "| - Interactive mode        |" ; INTERACT=y;;
-	    v )  echo "| - Verbose mode            |" ; VERBOSE='-- stacktrace';;
-      	r )  REL=$OPTARG; echo "| - Releasing $MINE$REL     |";;
+        F )  echo "> releasing FLYMINE        " ; MINE=flymine; HOST=mine-prod-1;;
+        H )  echo "> releasing HUMANMINE      " ; MINE=humanmine; HOST=mine-prod-0;;        
+        m )  echo "> Just do the sitemap      " ; MAPONLY=y;;
+	    i )  echo "> Interactive mode         " ; INTERACT=y;;
+	    v )  echo "> Verbose mode             " ; VERBOSE='-- stacktrace';;
+      	r )  REL=$OPTARG; echo "> Release $REL               ";;
         h )  usage ;;
 	    \?)  usage ;;
    esac
@@ -84,8 +83,6 @@ done
 
 shift $(($OPTIND - 1))
 
-
-echo "----------------------------"
 
 if [ -z $REL ] 
 then
@@ -150,13 +147,12 @@ checkHost
 let PREL=$REL-1
 MINEDIR=$CODEDIR/$MINE
 
+echo
 echo "============================================="
-echo "|"
-echo "|    Releasing $MINE v$REL on $HOST"
-echo "|"
+echo 
+echo "    Releasing $MINE v$REL on $HOST"
+echo 
 echo "============================================="
-
-
 
 
 
@@ -329,17 +325,16 @@ echo
 
 echo
 echo "Updating lucene indexes.."
-
 echo "- autocomplete..."
 ./gradlew postprocess -Pprocess=create-autocomplete-index $VERBOSE
-
+echo
 echo "- search index..."
 ./gradlew postprocess -Pprocess=create-search-index $VERBOSE
 
-echo
+echo "==========================================================="
 echo "Please check the release at https://www.flymine.org/flymine"
 echo "and at https://legacy.flymine.org/flymine/begin.do"
-echo
+echo "==========================================================="
 }
 
 function archive {
@@ -401,5 +396,5 @@ dorel
 #makeSitemaps
 
 # arkive!
-
+echo
 echo "bye!"
