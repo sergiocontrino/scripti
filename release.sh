@@ -29,7 +29,7 @@ SMSDIR=/code/intermine-sitemaps
 PDIR=$HOME/.intermine
 
 HOST=`hostname | cut -d. -f1`
-  
+USER=`whoami`  
 
 # tmp until we fix .bashrc
 #export JAVA_HOME=""
@@ -113,6 +113,27 @@ fi
 
 }
 
+function checkUser {
+	
+if [ $MINE = "flymine" -a $USER != "flymine" ] 
+then
+echo
+echo "ERROR: wrong user. You should be $MINE, not $USER"
+echo
+exit;
+fi
+
+if [ $MINE = "humanmine" -a $USER != "humanmine" ] 
+then
+echo
+echo "ERROR: wrong user. You should be $MINE, not $USER"
+echo
+exit;
+fi
+
+}
+
+checkUser
 
 checkHost
 
