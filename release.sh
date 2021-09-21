@@ -297,9 +297,9 @@ cd $PDIR
 cp $MINE.properties.$PREL $MINE.properties.$REL
 
 DD=`date "+%B %Y"`
-sed -i bup 's/releaseVersion=.*/releaseVersion='"$REL  $DD"'/' $MINE.properties.$REL
+sed -i 's/releaseVersion=.*/releaseVersion='"$REL  $DD"'/' $MINE.properties.$REL
 echo $DD
-sed -i bup 's/databaseName='"$MINE$PREL"'/databaseName='"$MINE$REL"'/' $MINE.properties.$REL
+sed -i 's/databaseName='"$MINE$PREL"'/databaseName='"$MINE$REL"'/' $MINE.properties.$REL
 
 rm $MINE.properties
 ln -s $MINE.properties.$REL $MINE.properties
