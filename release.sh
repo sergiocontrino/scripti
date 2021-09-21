@@ -155,7 +155,6 @@ echo
 echo "============================================="
 
 
-
 function interact {
 # if testing, wait here before continuing
 if [ $INTERACT = "y" ]
@@ -175,16 +174,19 @@ echo; echo "$1"
 echo "Press s to skip this step, return to continue (^C to exit).."
 echo -n "->"
 read 
+  if [ $REPLY -a $REPLY != 's' ]
+	then
+		$2
+	else
+		echo "skipping this step.."
+	fi
+else
+  $2
 fi
 }
 
 
-function donothing {
-echo "Just printing..."
-}
-
-
-function restorel {
+function restore {
 # drop previous?
 # dropdb -h localhost -U $MINE $MINE$PREL
 
@@ -202,105 +204,15 @@ fi
 }
 
 
-function dodb {
-
-if [ $INTERACT = "y" ]
-then 
-  if [ $REPLY -a $REPLY != 's' ]
-	then
-		echo "running release db setup.."
-		restorel
-	else
-		echo "skipping.."
-	fi
-else
-  echo "running release db setup.."
-  restorel
-fi
-}
-
-function doprops {
-
-if [ $INTERACT = "y" ]
-then 
-  if [ $REPLY -a $REPLY != 's' ]
-	then
-		echo "Writing $MINE.properties.$REL in $PDIR.."
-		echo "Using rel $PREL properties"
-		writeProps
-	else
-		echo "skipping.."
-	fi
-else
-  echo "Writing $MINE.properties.$REL.."
-  writeProps
-fi
-}
-
-
-function dorel {
-
-if [ $INTERACT = "y" ]
-then 
-  if [ $REPLY -a $REPLY != 's' ]
-	then
-		echo "Releasing $MINE$REL.."
-		deploy
-	else
-		echo "skipping.."
-	fi
-else
-  echo "Releasing $MINE$REL.."
-  deploy
-fi
-}
-
-
-
-function buildmine { 
-echo "not now.."
-exit;
-
-cd $MINEDIR
-
-if [ $REPLY -a $REPLY != 's' ]
-	then
-	echo "building $MINE.."
-
-
-# TODO mv all logs in a dir $MINEDIR/ark/$PREVREL
-#export JAVA_HOME=""
-
-
-# check if success
-./project_build -b -v localhost $DUMPDIR/$MINE$REL\
-|| { printf "%b" "\n  build FAILED!\n" ; exit 1 ; }
-
-#./project_build -b -v localhost /micklem/dumps/humanbuild/humanmine10
-		
-	else
-		echo "skipping.."
-	fi
-
-# if not on production machine you don't need: 
-#./gradlew postProcess -Pprocess=create-autocomplete-index
-#./gradlew postProcess -Pprocess=create-search-index
-#
-# TODO rm from build project.xml?
-}
-
-
 function writeProps {
-# 
-#
-#
 
+DD=`date "+%B %Y"`
+echo "Setting release to $REL and date to $DD..."
+echo
 cd $PDIR
 cp $MINE.properties.$PREL $MINE.properties.$REL
 
-DD=`date "+%B %Y"`
 sed -i 's/releaseVersion=.*/releaseVersion='"$REL  $DD"'/' $MINE.properties.$REL
-echo $DD
 sed -i 's/databaseName='"$MINE$PREL"'/databaseName='"$MINE$REL"'/' $MINE.properties.$REL
 
 rm $MINE.properties
@@ -337,18 +249,48 @@ echo "and at https://legacy.flymine.org/flymine/begin.do"
 echo "==========================================================="
 }
 
+
+
+####################
+#                  #
+#       MAIN       #
+#                  #
+####################
+
+if [ $MAPONLY = "y" ]
+then
+  interact "Just make the sitemaps please"
+  makeSitemaps
+  exit;
+fi
+
+
+#interacts "Building $MINE" buildmine
+
+interacts "Building (restoring) $MINE$REL on $HOST" restore
+
+interacts "Write $MINE.properties.$REL in $PDIR" writeProps 
+
+interacts "Release $MINE$REL:  NB THIS STEP WILL INTERRUPT CURRENT RELEASE" deploy
+
+#TODO?
+#makeSitemaps
+# arkive!
+
+echo
+echo "bye!"
+
+
+# ---------------- TO IMPLEMENT (?) ----------------
+
+
 function archive {
-# 
-#
-#
 
 echo "NOT IMPLEMENTED YET"
 exit;
 
 cd $RELDIR/$MINE
-
 mkdir r$REL
-
 mv ....
 
 }
@@ -364,37 +306,35 @@ echo "NOT IMPLEMENTED YET"
 
 }
 
+function buildmine { 
+echo "not now.."
+exit;
 
+cd $MINEDIR
+
+if [ $REPLY -a $REPLY != 's' ]
+	then
+	echo "building $MINE.."
+
+
+# TODO mv all logs in a dir $MINEDIR/ark/$PREVREL
+#export JAVA_HOME=""
+
+
+# check if success
+./project_build -b -v localhost $DUMPDIR/$MINE$REL\
+|| { printf "%b" "\n  build FAILED!\n" ; exit 1 ; }
+
+#./project_build -b -v localhost /micklem/dumps/humanbuild/humanmine10
+		
+	else
+		echo "skipping.."
+	fi
+
+# if not on production machine you don't need: 
+#./gradlew postProcess -Pprocess=create-autocomplete-index
+#./gradlew postProcess -Pprocess=create-search-index
 #
-# main..
-#
+# TODO rm from build project.xml?
+}
 
-
-if [ $MAPONLY = "y" ]
-then
-  interact "Just make the sitemaps please"
-  makeSitemaps
-  exit;
-fi
-
-
-#interacts "Building $MINE"
-#buildmine
-
-interacts "Building (restoring) $MINE$REL on $HOST" 
-dodb
-
-interacts "Write $MINE rel$REL properties" 
-doprops
-
-interacts "Release $MINE$REL:    NB THIS STEP WILL INTERRUPT CURRENT RELEASE"
-dorel
-
-
-#interact "Making the sitemaps"
-
-#makeSitemaps
-
-# arkive!
-echo
-echo "bye!"
