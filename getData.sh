@@ -9,9 +9,9 @@
 #       exit if wrong switchs combination!
 #
 #       BDGP : - add switch?
-#              - currently using mysql db in modalone! setup mysql in mega3           
+#              - currently using mysql db in modalone! setup mysql in mega3
 #       NCBIfasta: - mirror?
-#                  - gzip must check files integrity first/retry 
+#                  - gzip must check files integrity first/retry
 #       prot2Dom: mirror?
 
 
@@ -20,7 +20,7 @@ INTERACT=n       # y: step by step interaction
 DD=n             # y: run the download script?
 FB=n             # y: get FB files and build FB db
 UP=y             # n: don't run various updates and downloads
-DBHOST=localhost # you can enter a different server 
+DBHOST=localhost # you can enter a different server
 
 
 DATADIR=/micklem/data
@@ -40,38 +40,38 @@ function usage () {
 	cat <<EOF
 
 Usage:
-$progname [-F] [-f] [d] [u] [-i] [-S server]
+$progname [-F] [-f] [d] [u] [-i] [-h] [-S server]
   -F: get ONLY flybase sources
   -f: get flybase sources
   -d: run DataDownloader
   -u: run various updates and loads (default)
   -i: interactive mode
   -S: choose the database server (default localhost)
+  -h: display this help
 
 examples:
 
-$progname			    run updates/loads, no questions, no Flybase and DataDownloader
-$progname -d			as above, but run of DataDownloader
-$progname -i      		interactive version (source by source), default setting
-$progname -if      		interactive version (source by source), including flybase sources
-$progname -iF      		interactive version, get only flybase sources
-$progname -ifd     		interactive version, including running DataDownloader and flybase sources
-$progname -ifdu    		same as -ifd
+$progname                run updates/loads, no questions, no Flybase and DataDownloader
+$progname -d             as above, but run of DataDownloader
+$progname -i             interactive version (source by source), default setting
+$progname -if            interactive version (source by source), including flybase sources
+$progname -iF            interactive version, get only flybase sources
+$progname -ifd           interactive version, including running DataDownloader and flybase sources
+$progname -ifdu          same as -ifd
 
-$progname -S mega3      use mega3 as the database server
+$progname -S mega3       use mega3 as the database server
 
 EOF
 	exit 0
 }
 
-echo "----------------------------"
 
-while getopts "dFfiS:u" opt; do
+while getopts "dFfiS:uh" opt; do
    case $opt in
         f )  echo "| - Get FLYBASE data       |" ; FB=y;;
         d )  echo "| - Run DataDownloader     |" ; DD=y;;
         u )  echo "| - update and get sources |" ; UP=y;;
-	    i )  echo "| - Interactive mode       |" ; INTERACT=y;;
+	i )  echo "| - Interactive mode       |" ; INTERACT=y;;
         F )  echo "| - get ONLY FLYBASE data  |" ; FB=y; DD=n; UP=n;;
       	S )  DBHOST=$OPTARG; echo "- Using database server $DBHOST";;
         h )  usage ;;
@@ -81,11 +81,9 @@ done
 
 shift $(($OPTIND - 1))
 
-echo "----------------------------"
 echo
 
 # TODO: check user? not for getting sources
-
 
 function interact {
 # if testing, wait here before continuing
