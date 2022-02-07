@@ -1,11 +1,11 @@
 #!/bin/bash
 #
-# usage: getData.sh          batch mode updates  
+# usage: getData.sh          batch mode updates
 #        getData.sh -F       batch mode, only Flybase
 #        getData.sh -i       interactive (crude step by step) mode
 #
 
-# TODO 
+# TODO
 #       exit if wrong switchs combination!
 #
 #       BDGP : - add switch?
@@ -112,12 +112,12 @@ fi
 function getSources {
 #
 # get sources not in the DataDownloader
-# 
+#
 
 if [ $INTERACT = "y" ]
 then
   interacts "Get human FASTA please"
-  
+
   if [ $REPLY -a $REPLY != 's' ]
 	then
 		echo "running getNCBIfasta.."
@@ -133,7 +133,7 @@ fi
 if [ $INTERACT = "y" ]
 then
   interacts "Get human GFF please"
-  
+
   if [ $REPLY -a $REPLY != 's' ]
 	then
 		echo "running getNCBIgff.."
@@ -150,7 +150,7 @@ fi
 if [ $INTERACT = "y" ]
 then
   interacts "Update NCBI (add ensembl IDs)"
-  
+
   if [ $REPLY -a $REPLY != 's' ]
 	then
 		echo "running updateNCBI.."
@@ -166,7 +166,7 @@ fi
 if [ $INTERACT = "y" ]
 then
   interacts "Get gene summaries"
-  
+
   if [ $REPLY -a $REPLY != 's' ]
 	then
 		echo "running get_refseq_summaries.py.."
@@ -183,7 +183,7 @@ fi
 if [ $INTERACT = "y" ]
 then
   interacts "Get protein to domain data, takes a long time!"
-  
+
   if [ $REPLY -a $REPLY != 's' ]
 	then
 		echo "getting data.."
@@ -200,7 +200,7 @@ fi
 if [ $INTERACT = "y" ]
 then
   interacts "Get phenotype annotation (HPO)"
-  
+
   if [ $REPLY -a $REPLY != 's' ]
 	then
 		echo "getting HPO.."
@@ -220,13 +220,13 @@ echo
 
 function getFlySources {
 # get the data for flymine
-# 
+#
 #
 
 if [ $INTERACT = "y" ]
 then
   interacts "Get FlyBase please"
-  
+
   if [ $REPLY -a $REPLY != 's' ]
 	then
 		echo "running getFB.."
@@ -243,7 +243,7 @@ fi
 if [ $INTERACT = "y" ]
 then
   interacts "Get BDGP please"
-  
+
   if [ $REPLY -a $REPLY != 's' ]
 	then
 		echo "running getBDGP.."
@@ -262,8 +262,8 @@ fi
 
 
 
-function updateNCBI { 
-	
+function updateNCBI {
+
 cd $SHDIR
 
 echo "Running perl script adding ensembl ids..."
@@ -280,7 +280,7 @@ echo "ERROR, please check $WDIR"
 fi
 }
 
-function getGeneSummaries { 
+function getGeneSummaries {
 
 WDIR=$DATADIR/ncbi/gene-summaries
 
@@ -298,11 +298,11 @@ FIN=$DATADIR/ncbi/gene-info-human/current/Homo_sapiens.gene_info
 FOUT=$WDIR/current/gene_summaries.txt
 
 echo "Running python script getting gene summaries..."
-./bio/get_refseq_summaries.py $FIN $FOUT 
+./bio/get_refseq_summaries.py $FIN $FOUT
 
 }
 
-function getProt2Dom { 
+function getProt2Dom {
 # using wget -t 0 to set retry number to no limit
 # TODO: add a wget -c -t 0 if interruption happens
 
@@ -334,7 +334,7 @@ ls -la
 
 }
 
-function getNCBIfasta { 
+function getNCBIfasta {
 
 WDIR=/micklem/data/human/fasta
 
@@ -361,7 +361,7 @@ ln -s $NOW current
 echo "NCBI fasta updated!"
 }
 
-function getNCBIgff { 
+function getNCBIgff {
 
 WDIR=/micklem/data/human/gff
 
@@ -398,7 +398,7 @@ fi
 
 
 
-function getBDGP { 
+function getBDGP {
 # WORKING on modalone
 # TODO mv to mega3 (setup mysql)
 
@@ -431,7 +431,7 @@ mysql -u flymine bdgp$NOW < $BDGPDIR/$NOW/insitu.sql
 # run query
 # TODO: change mysql conf to allow dumping of files in BDGP dir
 
-EXPDIR="/var/lib/mysql-files/" 
+EXPDIR="/var/lib/mysql-files/"
 
 QUERY="select distinct g.gene_id, a.stage, i.image_path, t.go_term \
 from main g, image i, annot a, annot_term j, term t \
@@ -458,7 +458,7 @@ echo "BDGP has not been updated."
 fi
 }
 
-function getHPO { 
+function getHPO {
 
 WDIR=/micklem/data/hpo
 CFLAG="n"
@@ -509,7 +509,7 @@ echo "HPO: gene has not been updated."
 fi
 }
 
-function getFB { 
+function getFB {
 
 FBDIR=/micklem/data/flybase
 
@@ -526,12 +526,12 @@ wget ftp://ftp.flybase.net/releases/current/psql/*
 
 # TODO: check md5?
 
-# old version, keeping FB version number in postgres 
+# old version, keeping FB version number in postgres
 #FB=`grep createdb README | cut -d' ' -f5`
 #createdb -h localhost -U flymine $FB
 #cat FB* | gunzip | psql -h mega2 -U flymine -d $FB
 
-# create new fb db 
+# create new fb db
 # keeping a constant name (flybase) for the build properties
 
 echo "Dropping old flybase.."
@@ -560,25 +560,12 @@ echo "Just printing..."
 }
 
 
-function runDataDownloader { 
+function runDataDownloader {
 
-cd $CODEDIR/intermine-scripts
-
-if [ $INTERACT = "y" ]
-then
-  interacts "Run DataDownloader please"
-  
-  if [ $REPLY -a $REPLY != 's' ]
-	then
-		echo "running DataDownloader.."
-		perl bin/download_data -e intermine
-	else
-		echo "skipping.."
-	fi
-else
+  cd $CODEDIR/intermine-scripts/bio/DataDownloader
   echo "running DataDownloader.."
   perl bin/download_data -e intermine
-fi
+
 
 }
 
@@ -591,7 +578,7 @@ fi
 if [ $DD = "y" ]
 then
    interact "Running DataDownloader.."
-   runDataDownloader     
+   runDataDownloader
 fi
 
 if [ $UP = "y" ]
@@ -609,6 +596,3 @@ fi
 echo "bye!"
 
 exit;
-
-
-
