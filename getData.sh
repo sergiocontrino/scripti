@@ -27,13 +27,7 @@ DBHOST=localhost # you can enter a different server
 DATADIR=/micklem/data
 
 CODEDIR=/data/code
-#CODEDIR=$DATADIR/thalemine/git
 SHDIR=$CODEDIR/intermine-scripts
-
-# to rm
-REL=""
-MINEDIR=$CODEDIR/$MINE
-
 
 progname=$0
 
@@ -84,10 +78,9 @@ shift $(($OPTIND - 1))
 
 echo
 
-# TODO: check user? not for getting sources
 
 function interact {
-# if testing, wait here before continuing
+# if in interactive mode, wait here before continuing
 if [ $INTERACT = "y" ]
 then
 echo "$1"
@@ -256,7 +249,6 @@ else
   echo "running getBDGP.."
   getBDGP
 fi
-
 
 
 }
