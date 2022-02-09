@@ -2,8 +2,9 @@
 #
 # usage: getData.sh          batch mode updates
 #        getData.sh -F       batch mode, only Flybase
-#        getData.sh -i       interactive (crude step by step) mode
+#        getData.sh -i       interactive (step by step) mode
 #
+# sc
 
 # TODO
 #       exit if wrong switchs combination!
@@ -92,7 +93,7 @@ then
 echo "$1"
 echo "Press return to continue (^C to exit).."
 echo -n "->"
-read 
+read
 fi
 }
 
@@ -103,7 +104,7 @@ then
 echo; echo "$1"
 echo "Press s to skip this step, return to continue (^C to exit).."
 echo -n "->"
-read 
+read
 fi
 }
 
