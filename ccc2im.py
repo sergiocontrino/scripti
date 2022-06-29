@@ -21,7 +21,22 @@ def create_attribute(row, parent_node):
     src_datatype = row["DATA_TYPE"]
     attribute = ET.SubElement(parent_node, "attribute")
     attribute.set("name", src_field)
-    attribute.set("type", src_datatype.split(' ')[0])
+    attribute.set("type", fix_types(src_datatype))
+        
+    
+def fix_types(in_type):
+	""" transform original data types for im
+	"""
+	if in_type.startswith("date"):
+		return "java.util.Date"
+	elif in_type.endswith('char'):
+		return "java.lang.String"
+	elif in_type == "int" or in_type == "decimal":
+		return "java.lang.Integer"
+	else:
+		return in_type
+
+
 
 #Read in your DataFrame
 df = pd.read_csv("/Users/sergio/NHS/ccc/ccc_data_slim.csv", sep=",")
@@ -62,7 +77,7 @@ for class_name in class_names:
 
 
 # begin building xmltree
-xml_data = ET.Element("data")
+xml_data = ET.Element("classes")
 
 #loop through classes
 for class_name in class_names:
