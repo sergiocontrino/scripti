@@ -29,17 +29,20 @@ def fix_types(in_type):
 	"""
 	if in_type.startswith("date"):
 		return "java.util.Date"
-	elif in_type.endswith('char'):
+	elif in_type.endswith('char') or in_type == "bit":
 		return "java.lang.String"
-	elif in_type == "int" or in_type == "decimal":
+	elif in_type.endswith("int") or in_type == "decimal":
 		return "java.lang.Integer"
+#	elif in_type == "int" or in_type == "decimal":
+#		return "java.lang.Integer"
 	else:
 		return in_type
 
 
 
 #Read in your DataFrame
-df = pd.read_csv("/Users/sergio/NHS/ccc/ccc_data_slim.csv", sep=",")
+#df = pd.read_csv("/Users/sergio/NHS/ccc/ccc_data_slim.csv", sep=",")
+df = pd.read_csv("/Users/sergio/Desktop/ccs_redux.csv", sep=",")
 
 #get classes by getting unique vals on correct column
 class_names = df["TABLE_NAME"].unique().tolist()
