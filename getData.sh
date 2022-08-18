@@ -333,16 +333,18 @@ WDIR=$DATADIR/human/fasta
 
 cd $WDIR
 
-URI1="ftp://ftp.ncbi.nlm.nih.gov/genomes/refseq/vertebrate_mammalian/"
-URI2="Homo_sapiens/reference/GCF_000001405.39_GRCh38.p13/"
-URI3="GCF_000001405.39_GRCh38.p13_assembly_structure/Primary_Assembly"
+# NB: URI2 changes!
+URI2="GCF_000001405.40_GRCh38.p14/GCF_000001405.40_GRCh38.p14_assembly_structure/"
 
-# we assume these always change
+
+URI1="ftp://ftp.ncbi.nlm.nih.gov/genomes/refseq/vertebrate_mammalian/Homo_sapiens/reference/"
+URI3="Primary_Assembly/assembled_chromosomes/FASTA"
+
 
 NOW=`date "+%Y-%m-%d"`
 mkdir $NOW
 cd $NOW
-wget "$URI1$URI2$URI3"/assembled_chromosomes/FASTA/*
+wget "$URI1$URI2$URI3"/*
 gzip -d *
 
 cd $WDIR
