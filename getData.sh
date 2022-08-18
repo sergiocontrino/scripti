@@ -329,7 +329,7 @@ ls -la
 
 function getNCBIfasta {
 
-WDIR=/micklem/data/human/fasta
+WDIR=$DATADIR/human/fasta
 
 cd $WDIR
 
@@ -356,7 +356,7 @@ echo "NCBI fasta updated!"
 
 function getNCBIgff {
 
-WDIR=/micklem/data/human/gff
+WDIR=$DATADIR/human/gff
 
 cd $WDIR
 
@@ -395,7 +395,7 @@ function getBDGP {
 # WORKING on modalone
 # TODO mv to mega3 (setup mysql)
 
-BDGPDIR=/micklem/data/flymine/bdgp-insitu
+BDGPDIR=$DATADIR/flymine/bdgp-insitu
 
 cd $BDGPDIR/mysql
 
@@ -453,7 +453,7 @@ fi
 
 function getHPO {
 
-WDIR=/micklem/data/hpo
+WDIR=$DATADIR/hpo
 CFLAG="n"
 
 cd $WDIR
@@ -504,7 +504,7 @@ fi
 
 function getFB {
 
-FBDIR=/micklem/data/flybase
+FBDIR=$DATADIR/flybase
 
 cd $FBDIR
 
